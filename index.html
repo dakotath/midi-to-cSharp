@@ -7,19 +7,22 @@
   <title>MIDI to C#</title>
 </head>
 
-<body>
+<body class="header">
   <script src="js/Midi.js"></script>
   <script type="text/javascript" src="js/Tone.js"></script>
-  <h1>MIDI to C# Converter</h1>
-  <div>
+  <script xmlns="http://www.w3.org/1999/xhtml" async="" src="js/Blob.js"></script>
+  <script xmlns="http://www.w3.org/1999/xhtml" async="" src="js/FileSaver.min.js"></script>
+  <h1 style="text-align: center;">MIDI to C# Converter</h1>
+  <div class="buttons">
     <input type="file" id="filereader" />
     <div id="trackInfo"></div>
     <button type="button" id="start" onclick="handleMidi()">Generate</button>
     <button type="button" id="previewStart" onclick="togglePreview()">Play/Pause Preview</button>
     <button type="button" id="previewStop" onclick="stopPreview()">Stop Preview</button>
+    <button type="button" onclick="download();">Download script</button>
 
   </div>
-  <div>
+  <div class="values">
     <input type="checkbox" id="g4toggle">
     <label for="g4toggle"> Add G4 after M300 (required for Duet)</label>
     <br>
@@ -30,11 +33,14 @@
     <label for="caseNum">Gcode number</label>
   </div>
   <br>
-  <textarea id="outputArea" rows="50" cols="100"></textarea>
-  <textarea id="instructions" rows="50" cols="50" disabled>Instructions,</textarea>
+  <div class="resultOut">
+    <textarea id="outputArea" rows="50" cols="100"></textarea>
+    <textarea id="instructions" rows="50" cols="50" disabled>Instructions,</textarea>
+  </div>
   <script>
     let midi = null;
     document.getElementById('outputArea').value = '';
+    var voidname = document.getElementById('voidname').value;
 
     let synth = new Tone.Synth({
       oscillator: {
@@ -99,7 +105,21 @@
       let a = 440; //frequency of A (common value is 440Hz)
       return (a / 32) * 2 ** ((note - 9) / 12);
     }
-
+  function download() 
+  {
+    var save = document.getElementById("outputArea").value;
+    var blob = new Blob([save], {
+    type: "text/plain;charset=utf-8"
+    });
+    if(save == "")
+    {
+      alert('Null result, not downloading.')
+    }
+    else
+    {
+      saveAs(blob, voidname + ".cpp");
+    }
+  }
     function handleMidi() {
       const useG4 = document.getElementById("g4toggle").checked;
 
@@ -137,7 +157,7 @@
 
       let curr = 0;
       const gcode = [];
-      var voidname = document.getElementById('voidname').value;
+      voidname = document.getElementById('voidname').value;
       var caseNumber = document.getElementById('caseNum').value;
       let instr = document.getElementById("instructions");
       instr.innerHTML = `\n1. Copy and paste the data into a new file called ${voidname}.cpp\nin the Marlin\\src\\gcode\\lcd folder.\n\n2. in the gcode folder, open gcode.cpp and gcode.h, Now press ^H or Ctrl+H and look for HAS_BUZZER. Under the M300 line, add case ${caseNumber}: ${voidname}(); break;\n\n3. Now in gcode.h press ^H or Ctrl+H and find HAS_BUZZER. Under M300(); add static void ${voidname}();\n\n4. Now compile your firmware and open your serial port and type M${caseNumber}`;
