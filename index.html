@@ -8,8 +8,8 @@
 </head>
 
 <body>
-  <script src="https://unpkg.com/@tonejs/midi"></script>
-  <script type="text/javascript" src="https://unpkg.com/tone@13.4.9/build/Tone.js"></script>
+  <script src="js/Midi.js"></script>
+  <script type="text/javascript" src="js/Tone.js"></script>
   <h1>MIDI to C# Converter</h1>
   <div>
     <input type="file" id="filereader" />
@@ -22,9 +22,16 @@
   <div>
     <input type="checkbox" id="g4toggle">
     <label for="g4toggle"> Add G4 after M300 (required for Duet)</label>
+    <br>
+    <input type="text" id="voidname">
+    <label for="voidname">Void name (Ex: M10003)</label>
+    <br>
+    <input type="number" min="10000" id="caseNum">
+    <label for="caseNum">Gcode number</label>
   </div>
   <br>
   <textarea id="outputArea" rows="50" cols="100"></textarea>
+  <textarea id="instructions" rows="50" cols="50" disabled>Instructions,</textarea>
   <script>
     let midi = null;
     document.getElementById('outputArea').value = '';
@@ -130,7 +137,14 @@
 
       let curr = 0;
       const gcode = [];
-      gcode.push(`void GcodeSuite::renameMe() {\n`)
+      var voidname = document.getElementById('voidname').value;
+      var caseNumber = document.getElementById('caseNum').value;
+      let instr = document.getElementById("instructions");
+      instr.innerHTML = `\n1. Copy and paste the data into a new file called ${voidname}.cpp\nin the Marlin\\src\\gcode\\lcd folder.\n\n2. in the gcode folder, open gcode.cpp and gcode.h, Now press ^H or Ctrl+H and look for HAS_BUZZER. Under the M300 line, add case ${caseNumber}: ${voidname}(); break;\n\n3. Now in gcode.h press ^H or Ctrl+H and find HAS_BUZZER. Under M300(); add static void ${voidname}();\n\n4. Now compile your firmware and open your serial port and type M${caseNumber}`;
+      gcode.push(`#include "../../inc/MarlinConfig.h"\n\n#if HAS_BUZZER\n\n#include "../gcode.h"\n
+#include "../../lcd/marlinui.h" // i2c-based BUZZ\n
+#include "../../libs/buzzer.h"  // Buzzer, if possible\n
+void GcodeSuite::${voidname}() {\n`)
       while (curr < track.notes.length) {
         // Keep the highest non-percussion note if multiple occur at the same time
         let highestCurrNote = track.notes[curr].percussion ? -1 : track.notes[curr].midi;
@@ -202,7 +216,7 @@
 
         curr++;
       }
-      gcode.push(`}`);
+      gcode.push(`}\n#endif`);
       const output = gcode.reduce((acc, e) => acc + e, "");
       document.getElementById("outputArea").value = output;
     }
