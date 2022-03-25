@@ -4,13 +4,13 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="stylesheet" href="styles.css">
-  <title>MIDI to M300</title>
+  <title>MIDI to C#</title>
 </head>
 
 <body>
   <script src="https://unpkg.com/@tonejs/midi"></script>
   <script type="text/javascript" src="https://unpkg.com/tone@13.4.9/build/Tone.js"></script>
-  <h1>MIDI to Marlin C# Converter</h1>
+  <h1>MIDI to M300 Converter</h1>
   <div>
     <input type="file" id="filereader" />
     <div id="trackInfo"></div>
@@ -20,6 +20,8 @@
 
   </div>
   <div>
+    <input type="checkbox" id="g4toggle">
+    <label for="g4toggle"> Add G4 after M300 (required for Duet)</label>
   </div>
   <br>
   <textarea id="outputArea" rows="50" cols="100"></textarea>
